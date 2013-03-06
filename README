@@ -1,0 +1,29 @@
+CS408 Project 1
+Daniel Uber
+Spring 2013
+
+Implement D&C Sat algorithm for cnf formulas.
+
+Current implementation is memory intensive. 
+Subproblems do not shrink and no attempt to share structure
+has been made. For larger benchmarks (250 variables, 1000 clauses)
+this results in termination due to excessive memory allocation.
+
+For recommeded benchmarks, this is effective.
+Satisfiable clauses are solved in around 1msec, and 
+unsatisfiable clauses are rejected in ~500sec. This largely has to 
+do with the small size of the problems. Even so, megabytes of storage are heap allocated in both cases.
+
+TODO:
+
+For version two, extend problem structure to include a fresh overlay,
+indicating which clauses have been freshly allocated by introduce. Modify
+release to only free pointers owned by this instance, and not shared with
+a parent. This should reduce the memory size.
+
+Secondly, remove satisfied clauses rather than marking them as
+length 0 and copying them into each child. Optionally, remove variable
+instances which have been asserted. This involves extending the variable
+type to include a number, since currently the assumption is that the variable
+number is coupled to the array offset in each clause.
+

@@ -1,0 +1,32 @@
+# CS408 Project 1 
+# Daniel Uber
+# windows version of Makefile using cross-compiler
+headers = CNF.h
+objects = CNF.obj readfile.obj
+# the windows cross compiler
+CXX= i586-mingw32msvc-g++ 
+CXXFLAGS=-Wall -Werror -g
+
+
+# dummy target
+all: cnf
+
+# use distinct object extension for PE objects
+# add explicit rules since make only knows how to build .o
+CNF.obj: $(headers) CNF.cc
+	$(CXX) $(CXXFLAGS) -o CNF.obj -c CNF.cc
+
+readfile.obj: $(headers) readfile.cc
+	$(CXX) $(CXXFLAGS) -o readfile.obj -c readfile.cc
+
+# the cnf executable for windows cnf.exe
+cnf: $(objects)
+	$(CXX) $(CXXFLAGS) -o cnf.exe $(objects)
+
+# remove temp files and objects
+clean:
+	rm -f *.obj *~  cnf.exe;
+
+test: all
+	sh test-windows.sh
+
