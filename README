@@ -11,7 +11,7 @@ this results in termination due to excessive memory allocation.
 
 For recommeded benchmarks, this is effective.
 Satisfiable clauses are solved in around 1msec, and 
-unsatisfiable clauses are rejected in ~500sec. This largely has to 
+unsatisfiable clauses are rejected in ~500msec. This largely has to 
 do with the small size of the problems. Even so, megabytes of storage are heap allocated in both cases.
 
 TODO:
