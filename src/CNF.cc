@@ -5,6 +5,7 @@
 
 #include "CNF.h"
 #include <iostream>
+#include <iomanip>
 #include <cstdlib>
 #include <cassert>
 
@@ -116,10 +117,10 @@ int first(clause c, problem phi){
  */
 void print_assignment(problem phi){
   for(int index = 0; index < phi->variable_count; index++) {
-    std::cout
+    std::cout<<std::setw(4)
       <<(index + 1)*(phi->variables[index]? phi->variables[index] : 1)
       <<"  "; 
-    if(!((index+1) % 20))
+    if(!((index+1) % 10))
       std::cout<<std::endl;
   }
   std::cout<<std::endl<<std::endl;
