@@ -6,30 +6,34 @@ Implement D&C Sat algorithm for cnf formulas.
 CNF formulas given as file input per http://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 If a solution is found, output the assignment, otherwise answer no.
 
-Current implementation is a bit memory intensive. 
 Subproblems do not shrink, even though the problem space has been reduced.
+However, shared structure essentially keeps memory use constant once full stack depth has been reached,
+since nothing is allocated without a comparable number of frees.
 
 For recommeded benchmarks of size 20 and 50 variables, this is effective.
-For problems of 75 variables, a segfault occurs.
+
 
 Satisfiable clauses are solved in around 1msec, and 
 unsatisfiable 50 variable clauses are rejected in <100msec. This largely has to 
 do with the small size of these problems. 
+Able to solve 125 variable problems in under 10 seconds, 150 variable benchmarks in about 40 seconds.
+250 variable 
 
 TODO:
-(done) For version two, extend problem structure to include a fresh overlay,
-indicating which clauses have been freshly allocated by introduce. Modify
-release to only free pointers owned by this instance, and not shared with
-a parent. This should reduce the memory size.
+(done) Implement structure sharing instead of fresh allocation.
 
-Secondly, remove satisfied clauses rather than marking them as
-length 0 and copying them into each child (partly done, the_true_clause is now available). 
 Optionally, remove variable instances which have been asserted. This involves extending the variable
 type to include a number, since currently the assumption is that the variable
 number is coupled to the array offset in each clause.
 
+Secondly, remove satisfied clauses rather than marking them as
+length 0 and copying them into each child (partly done, the_true_clause is now available), 
+however, the clause_count stays constant.
+
 Third, refactor array access of variables to use functions (this allows for
 tracking/profiling/consistent error checking).
 
-Fourth, guard against failed allocations (although it seems the stack is the problem right now).
+Fourth, determine why valgrind reports errors for calloc of clauses
+when no error is apparent in program execution. Reported error is 
+invalid read of size 4, in copy_clause(), Address 0x(number) is 0 bytes after a block of size N alloc'd
 
