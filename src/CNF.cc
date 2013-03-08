@@ -77,15 +77,16 @@ bool already_satisfied(problem phi){
    return the first non-empty clause in phi of minimum length
  */
 clause shortest(problem phi){
-  unsigned char result = 0;
+  int result = 0;
   // skip over any satisfied clauses at the beginning
   while(phi->clause_length[result] == 0)
     result++;
   // identify the shortest unsatisfied clause
-  for(int index = 1 ; index < phi->clause_count ; index++)
+  for(int index = result+1 ; index < phi->clause_count ; index++)
     if(phi->clause_length[index] && // only non-empty clauses matter
        phi->clause_length[index] < phi->clause_length[result])
-      result = index;
+      if(phi->clauses[index])
+	result = index;
   return phi->clauses[result];
 }
 
@@ -95,7 +96,7 @@ clause shortest(problem phi){
  */
 int first(clause c, problem phi){
   for(int index = 0; index < phi->variable_count ; index++)
-    if(c[index])
+    if(c && c[index])
       return index;
   // never get here in a working program, but muffle the compiler
   // and warn the user that something went wrong
@@ -156,7 +157,7 @@ void release_problem(problem phi){
     free(phi->variables);
     free(phi->clause_length);
     for(int i = 0; i < phi->clause_count; i++){
-      if(phi->fresh_clause[i] ) // only free memory we own
+      if(phi->fresh_clause[i] && phi->clauses[i]) // only free memory we own
 	free(phi->clauses[i]);
     }
     free(phi->clauses);
@@ -271,7 +272,8 @@ void print_form(problem phi){
   for(int c = 0; c < phi->clause_count; c++){
     if(phi->clauses[c]){
       for(int v = 0; v < phi->variable_count; v++)
-	std::cout<<c+1<<":"<<v+1<<":"<<(int)phi->clauses[c][v]<<" ";
+	if( phi->clauses[c][v]) // skip unassigned
+	  std::cout<<c+1<<":"<<v+1<<":"<<(int)phi->clauses[c][v]<<" ";
       std::cout<<std::endl;
     }
   }
