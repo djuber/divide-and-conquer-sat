@@ -25,7 +25,8 @@ Function added to factor logic out of read_problem_file
  */
 void create_empty_clauses(problem phi){
   for(int index = 0; index < phi->clause_count; index++){
-    phi->clauses[index] = (clause)calloc(phi->variable_count, sizeof(assignment));
+    phi->clauses[index] = 
+      (clause) calloc(phi->variable_count, sizeof(assignment));
     phi->fresh_clause[index]=true;
   }
   return;
@@ -33,8 +34,9 @@ void create_empty_clauses(problem phi){
 
 /**
 process_string_in_problem(s,phi,count)
-given an input string which is neither a comment, a problem line, nor a percent,
-read the integers in string into the clause designated by clause_count in phi
+given an input string which is neither a comment, 
+a problem line, nor a percent, read the integers in string 
+into the clause designated by clause_count in phi
 this function factors out behavior from read_problem_file
  */
 void process_string_in_problem(std::string s, problem phi, int &clause_count){
@@ -46,7 +48,8 @@ void process_string_in_problem(std::string s, problem phi, int &clause_count){
       if(var != 0) {
 	if (clause_count >= phi->clause_count){
 	  std::cerr<<"number of clauses exceeds expected value.\n"<<std::endl
-		   <<"Details: \nInputLine: "<<s<<"\n clauses expected: "<<phi->clause_count
+		   <<"Details: \nInputLine: "<<s
+		   <<"\n clauses expected: "<<phi->clause_count
 		   <<"\ncurrent clause_counter: "<<clause_count<<std::endl;
 	  return;
 	} 

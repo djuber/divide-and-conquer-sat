@@ -134,16 +134,13 @@ void print_assignment(problem phi){
    return pointer to the new problem
  */
 problem empty_form_of_size(int clauses, int variables){
-  problem rho = (problem)malloc(sizeof(problem_struct));
+  problem rho = (problem) malloc(sizeof(problem_struct));
   rho->variable_count = variables;
   rho->clause_count = clauses;
   rho->clause_length = (length_list) calloc(clauses, sizeof(int));
-  rho->clauses = (form)calloc(clauses, sizeof(clause));
-  rho->variables = (variable_list) calloc(variables, sizeof(assignment));
+  rho->clauses = (form) calloc(clauses, sizeof(clause));
   rho->fresh_clause = (fresh_list) calloc(clauses, sizeof(bool));
-  // removed for sharing : use pointers to parent instead.
-  // for(int index=0; index < clauses; index++)
-  //   rho->clauses[index] = (clause)calloc(variables, sizeof(assignment));
+  rho->variables = (variable_list) calloc(variables, sizeof(assignment));
   return rho;
 }
 
@@ -248,7 +245,8 @@ problem introduce(problem phi, int variable, assignment a){
 	release_problem(rho);
 	return (problem) NULL;
       }
-      rho->clauses[clause_index] = copy_clause(phi->clauses[clause_index], rho->clause_count);
+      rho->clauses[clause_index] = 
+	copy_clause(phi->clauses[clause_index], rho->clause_count);
       rho->fresh_clause[clause_index]=true;
       rho->clauses[clause_index][variable] = UNASSIGNED;
       rho->clause_length[clause_index] -= 1;
