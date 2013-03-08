@@ -44,7 +44,12 @@ void process_string_in_problem(std::string s, problem phi, int &clause_count){
     while(iss.good()){
       iss>>var;
       if(var != 0) {
-	assert(clause_count < phi->clause_count);
+	if (clause_count >= phi->clause_count){
+	  std::cerr<<"number of clauses exceeds expected value.\n"<<std::endl
+		   <<"Details: \nInputLine: "<<s<<"\n clauses expected: "<<phi->clause_count
+		   <<"\ncurrent clause_counter: "<<clause_count<<std::endl;
+	  return;
+	} 
 	// transform integer in input into offset and assignment
 	phi->clauses[clause_count][abs(var) -1] = 
 	  (var > 0)?TRUE : FALSE;
@@ -70,7 +75,7 @@ problem problem_from_problem_line(std::string s){
   std::string pchar, cnfword;
   std::istringstream iss(s);
   problem phi = (problem) NULL;
-  int variable_count, clause_count;
+  int variable_count, clause_count=0;
   iss>>pchar
      >>cnfword
      >> variable_count
@@ -113,9 +118,8 @@ problem read_problem_file(const char* filename) {
       if(s[0]!='c'){ // skip comment lines.
 	if(s[0] == 'p') {
 	  phi = problem_from_problem_line(s);
-        } else if (s[0] != '%') {
-	  // s is not a comment, a problem statement, or a percentage sign
-	  // so it must be clause information : read it
+        } 
+	else if (!s.empty() && s[0] != '%') {
 	  process_string_in_problem(s, phi, clause_count);
 	} // string is not a comment
       } // while input available
