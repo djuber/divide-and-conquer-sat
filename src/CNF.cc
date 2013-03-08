@@ -147,9 +147,9 @@ problem empty_form_of_size(int clauses, int variables){
 /**
    release_problem(phi)
    free() allocated resources for the problem struct.
+   only free memory we allocated for fresh clauses
+   don't clobber parent
  */
-// sharing : only free memory we allocated for fresh clauses
-// i.e. don't damage parent!
 void release_problem(problem phi){
   if(phi){ // don't try to look inside a null pointer
     free(phi->variables);
@@ -180,10 +180,9 @@ void copy_variables(problem from, problem to) {
 /**
    copy_clauses(from, to)
    given from and to of the same size
-   copy clauses from from to to
+   copy clause pointers from from to to
    and set clause lengths in to to match from
  */
-// sharing feature : copy pointer instead of new arrays
 void copy_clauses(problem from, problem to){
   for(int clause_index = 0; clause_index < from->clause_count; 
       clause_index++){
