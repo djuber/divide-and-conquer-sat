@@ -46,4 +46,5 @@ cnf.exe: $(winobjects)
 windows-test: windows
 	sh test-windows.sh	
 
-
+zipfile: 
+	sh package.sh

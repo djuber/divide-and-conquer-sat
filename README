@@ -14,15 +14,14 @@ comparable number of frees.
 For recommeded benchmarks of size 20 and 50 variables, this is effective.
 Satisfiable clauses are solved in around 1msec, and 
 unsatisfiable 50 variable clauses are rejected in <100msec. 
-This largely has to 
-do with the small size of these problems. 
+This largely has to do with the small size of these problems. 
 Able to solve 125 variable problems in under 10 seconds, 
 150 variable benchmarks in about 40 seconds.
 250 variable case in benchmarks runs for a long time...
 
 NOTES:
 Makefile assume a linux build environment, but target windows 
-will build a PE .exe file 
+will build a PE .exe file using a cross compiler
 make test target assumes that benchmark files are in the parent directory. 
 These are available from http://www.cs.ubc.ca/~hoos/SATLIB/benchm.html
 Memory allocation tested with valgrind, no leaks possible.
@@ -34,11 +33,14 @@ Optionally, remove variable instances which have been asserted.
 This involves extending the variable type to include a number, 
 since currently the assumption is that the variable
 number is coupled to the array offset in each clause.
+Although subproblems would have fewer variables, it's unclear
+that we can still share clauses with parent.
 
 Secondly, remove satisfied clauses rather than marking them as
 length 0 and copying them into each child 
 (partly done, the_true_clause is now available and used), 
-however, the clause_count stays constant.
+however, the clause_count stays constant, so the problem is the 
+same size (although we ignore satisfied clauses.)
 
 Third, refactor array access of variables to use functions (this allows for
 tracking/profiling/consistent error checking).
@@ -47,4 +49,4 @@ Fourth, determine why valgrind reports errors for calloc of clauses
 when no error is apparent in program execution. Reported error is 
 invalid read of size 4, in copy_clause(), 
 Address 0x(number) is 0 bytes after a block of size N alloc'd
-I suspect this may have to do with minor page faults and is not critical.
+
