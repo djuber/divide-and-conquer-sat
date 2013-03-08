@@ -28,3 +28,8 @@ Optionally, remove variable instances which have been asserted. This involves ex
 type to include a number, since currently the assumption is that the variable
 number is coupled to the array offset in each clause.
 
+Third, refactor array access of variables to use functions (this allows for
+tracking/profiling/consistent error checking).
+
+Fourth, guard against failed allocations (although it seems the stack is the problem right now).
+
