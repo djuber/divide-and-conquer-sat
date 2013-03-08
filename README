@@ -11,13 +11,16 @@ However, shared structure essentially keeps memory use constant once full stack 
 since nothing is allocated without a comparable number of frees.
 
 For recommeded benchmarks of size 20 and 50 variables, this is effective.
-
-
 Satisfiable clauses are solved in around 1msec, and 
 unsatisfiable 50 variable clauses are rejected in <100msec. This largely has to 
 do with the small size of these problems. 
 Able to solve 125 variable problems in under 10 seconds, 150 variable benchmarks in about 40 seconds.
-250 variable 
+250 variable case in benchmarks runs for a long time...
+
+NOTES:
+Makefile assume a linux build environment, but target windows will build a PE .exe file 
+make test target assumes that benchmark files are in the parent directory. These are 
+available from http://www.cs.ubc.ca/~hoos/SATLIB/benchm.html
 
 TODO:
 (done) Implement structure sharing instead of fresh allocation.
