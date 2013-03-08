@@ -20,8 +20,11 @@ cnf: $(objects)
 	$(CXX) $(CXXFLAGS) -o cnf $(objects)
 
 # remove temp files and objects
-clean:
-	rm -f *.o *~ cnf cnf.exe *.obj;
+clean: clean-objects
+	rm -f  *~ cnf cnf.exe;
+
+clean-objects:
+	rm -f *.o *.obj;
 
 test: all
 	sh test.sh
