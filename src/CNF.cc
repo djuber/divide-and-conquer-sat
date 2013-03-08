@@ -227,8 +227,6 @@ problem copy_problem(problem from){
    If introducing the variable makes some clause empty,
    we abort and return NULL.
  */
-// sharing : added constant true clause, and 
-// copy clause before changing it, updating fresh
 problem introduce(problem phi, int variable, assignment a){
   problem rho = copy_problem(phi);
   rho->variables[variable] = a;
