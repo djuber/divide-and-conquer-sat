@@ -16,26 +16,13 @@ provides read_problem_file
 #include <cassert>
 #include <cstdlib>
 
-/**
-   dummy_problem(size)
-   stub out read_problem_file
-   create a test case to verify algorithm
-   this is not the best case, maybe (i < j)?FALSE:TRUE would be better.
-   used before read_problem_file was working.
- */
-problem dummy_problem(const int size) 
-{
-  // temporary dummy function for testing
-  // any false assignment will satisfy
-  problem phi = empty_form_of_size(size, size);
-  for(int i = 0; i < size; i++){
-    for(int j = 0; j < size; j++)
-      phi->clauses[j][i]=FALSE; 
-    phi->clause_length[i]  = size;
-  }
-  return phi;
-}
 
+/**
+create_empty_clauses(phi)
+since empty_form_of_size no longer initializes clauses
+when reading from file we need to allocate the arrays.
+Function added to factor logic out of read_problem_file
+ */
 void create_empty_clauses(problem phi){
   for(int index = 0; index < phi->clause_count; index++){
     phi->clauses[index] = (clause)calloc(phi->variable_count, sizeof(assignment));
@@ -44,6 +31,59 @@ void create_empty_clauses(problem phi){
   return;
 }
 
+/**
+process_string_in_problem(s,phi,count)
+given an input string which is neither a comment, a problem line, nor a percent,
+read the integers in string into the clause designated by clause_count in phi
+this function factors out behavior from read_problem_file
+ */
+void process_string_in_problem(std::string s, problem phi, int &clause_count){
+  if(phi){
+    int var;
+    std::istringstream iss(s);
+    while(iss.good()){
+      iss>>var;
+      if(var != 0) {
+	assert(clause_count < phi->clause_count);
+	// transform integer in input into offset and assignment
+	phi->clauses[clause_count][abs(var) -1] = 
+	  (var > 0)?TRUE : FALSE;
+	phi->clause_length[clause_count] += 1;
+      } else if(var == 0) { clause_count++; }
+    } // reading line
+  } // phi is not null
+  else {
+    std::cerr<<"trying to access uncreated problem form"
+	     <<std::endl
+	     <<"This is likely a malformed file."<<std::endl;
+  }
+  return;
+}
+
+/**
+   problem_from_problem_line(s)
+   process string s containing problem description
+   creates a new problem of the correct size 
+   factoring out behavior in read_problem_file
+*/
+problem problem_from_problem_line(std::string s){
+  std::string pchar, cnfword;
+  std::istringstream iss(s);
+  problem phi = (problem) NULL;
+  int variable_count, clause_count;
+  iss>>pchar
+     >>cnfword
+     >> variable_count
+     >> clause_count;
+  if(cnfword != "cnf") {
+    std::cerr<<"Attempting to read problem of type: "
+	     <<cnfword<<std::endl;
+    return (problem)NULL;
+  }
+  phi = empty_form_of_size(clause_count,  variable_count);
+  create_empty_clauses(phi);
+  return phi;
+}
 
 
 /** 
@@ -61,9 +101,8 @@ void create_empty_clauses(problem phi){
 problem read_problem_file(const char* filename) {
   std::ifstream input;
   std::string s;
-  problem phi;
+  problem phi = (problem) NULL;
   int clause_count = 0;
-  int specified_variable_count, specified_clause_count;
   input.open(filename);
 // outline : find p line, read number of variables and number of clauses 
 // allocate a problem of that size
@@ -73,52 +112,17 @@ problem read_problem_file(const char* filename) {
       getline(input, s);
       if(s[0]!='c'){ // skip comment lines.
 	if(s[0] == 'p') {
-	  std::string pchar, cnfword;
-	  std::istringstream iss(s);
-	  iss>>pchar
-	     >>cnfword
-	     >>specified_variable_count
-	     >>specified_clause_count;
-	  if(cnfword != "cnf") {
-	    std::cerr<<"Attempting to read problem of type: "
-		     <<cnfword<<std::endl;
-	    return (problem)NULL;
-	  }
-	  phi = empty_form_of_size(specified_clause_count, 
-				   specified_variable_count);
-	  create_empty_clauses(phi);
-
+	  phi = problem_from_problem_line(s);
         } else if (s[0] != '%') {
 	  // s is not a comment, a problem statement, or a percentage sign
 	  // so it must be clause information : read it
-	  if(phi){
-	    int var;
-	    std::istringstream iss(s);
-	    while(iss.good()){
-	      iss>>var;
-	      if(var != 0) {
-		assert(clause_count < specified_clause_count);
-		// transform integer in input into offset and assignment
-		phi->clauses[clause_count][abs(var) -1] = 
-		  (var > 0)?TRUE : FALSE;
-		phi->clause_length[clause_count] += 1;
-	      } else if(var == 0) { clause_count++; }
-	    } // reading line
-	  } // phi is not null
-	  else {
-	    std::cerr<<"trying to access uncreated problem form"
-		     <<std::endl
-		     <<"This is likely a malformed file."<<std::endl;
-	  }
+	  process_string_in_problem(s, phi, clause_count);
 	} // string is not a comment
       } // while input available
     }      
     input.close();
-  } else {
+  } else  // file not open
     std::cerr<<"file "<< filename<<" not found."<<std::endl;
-    return (problem)NULL;
-  }
-  //    return dummy_problem(10);
   return phi;
 }
 
