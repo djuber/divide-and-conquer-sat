@@ -21,20 +21,25 @@ enum assignment {
 typedef assignment* variable_list;
 // the length list records the number of free variables in each clause
 typedef int* length_list;
+typedef bool* fresh_list;
 // a clause is an array of assignments
 typedef assignment* clause;
 // a cnf formula is an array of clauses
 typedef clause* form;
 
+// a uniform way to represent satisfied clauses.
+const clause the_true_clause = (clause) 0;
+
 // problem_struct is the representation of a cnf form plus the 
 // assigned interpretations, and information about the problem
 // i.e. the number of variables and clauses, and the lengths of each clause
 struct problem_struct{
-   variable_list variables;
-   form clauses;
-   length_list clause_lengths;
-   int variable_count;
-   int clause_count;
+  variable_list variables;
+  form clauses;
+  length_list clause_length;
+  fresh_list fresh_clause;
+  int variable_count;
+  int clause_count;
 };
 
 // utility typedef
@@ -67,12 +72,14 @@ void print_assignment(problem phi);
 void release_problem(problem phi);
 
 // introduce and simplify with an assigned variable
-problem introduce(problem phi, unsigned char variable, assignment a);
+problem introduce(problem phi, int variable, assignment a);
 
 // problem creation/allocation utility functions
 problem empty_form_of_size(int clauses, int variables);
 void copy_variables(problem from, problem to);
 void copy_clauses(problem from, problem to);
+clause copy_clause(clause from, int size);
+
 problem copy_problem(problem from, problem to);
 
 // used for debugging

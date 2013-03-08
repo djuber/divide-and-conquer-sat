@@ -6,7 +6,6 @@
 #include "CNF.h"
 #include <iostream>
 #include <cstdlib>
-#include <cstdio>
 #include <cassert>
 
 /** 
@@ -20,7 +19,7 @@ int main(int argc, char** argv){
     usage(argv);
   else if(!satisfiable(read_problem_file(argv[1])))
     std::cout<<"NO"<<std::endl;
-  return 0; // originally this exited with -1, removed.
+  return 0; 
 }
 
 /** 
@@ -67,7 +66,7 @@ bool satisfiable(problem phi){
  */
 bool already_satisfied(problem phi){
   for(int index = 0; index < phi->clause_count; index++)
-    if(phi->clause_lengths[index])
+    if(phi->clause_length[index])
       return false;
   return true;
 }
@@ -80,12 +79,12 @@ bool already_satisfied(problem phi){
 clause shortest(problem phi){
   unsigned char result = 0;
   // skip over any satisfied clauses at the beginning
-  while(phi->clause_lengths[result] == 0)
+  while(phi->clause_length[result] == 0)
     result++;
   // identify the shortest unsatisfied clause
   for(int index = 1 ; index < phi->clause_count ; index++)
-    if(phi->clause_lengths[index] && // only non-empty clauses matter
-       phi->clause_lengths[index] < phi->clause_lengths[result])
+    if(phi->clause_length[index] && // only non-empty clauses matter
+       phi->clause_length[index] < phi->clause_length[result])
       result = index;
   return phi->clauses[result];
 }
@@ -136,11 +135,13 @@ problem empty_form_of_size(int clauses, int variables){
   problem rho = (problem)malloc(sizeof(problem_struct));
   rho->variable_count = variables;
   rho->clause_count = clauses;
-  rho->clause_lengths = (length_list) calloc(clauses, sizeof(int));
+  rho->clause_length = (length_list) calloc(clauses, sizeof(int));
   rho->clauses = (form)calloc(clauses, sizeof(clause));
   rho->variables = (variable_list) calloc(variables, sizeof(assignment));
-  for(int index=0; index < clauses; index++)
-    rho->clauses[index] = (clause)calloc(variables, sizeof(assignment));
+  rho->fresh_clause = (fresh_list) calloc(clauses, sizeof(bool));
+  // removed for sharing : use pointers to parent instead.
+  // for(int index=0; index < clauses; index++)
+  //   rho->clauses[index] = (clause)calloc(variables, sizeof(assignment));
   return rho;
 }
 
@@ -148,13 +149,18 @@ problem empty_form_of_size(int clauses, int variables){
    release_problem(phi)
    free() allocated resources for the problem struct.
  */
+// sharing : only free memory we allocated for fresh clauses
+// i.e. don't damage parent!
 void release_problem(problem phi){
   if(phi){ // don't try to look inside a null pointer
     free(phi->variables);
-    free(phi->clause_lengths);
-    for(int i = 0; i < phi->clause_count; i++)
-      free(phi->clauses[i]);
+    free(phi->clause_length);
+    for(int i = 0; i < phi->clause_count; i++){
+      if(phi->fresh_clause[i] ) // only free memory we own
+	free(phi->clauses[i]);
+    }
     free(phi->clauses);
+    free(phi->fresh_clause);
     free(phi);
   }
   return;
@@ -178,15 +184,25 @@ void copy_variables(problem from, problem to) {
    copy clauses from from to to
    and set clause lengths in to to match from
  */
+// sharing feature : copy pointer instead of new arrays
 void copy_clauses(problem from, problem to){
   for(int clause_index = 0; clause_index < from->clause_count; 
       clause_index++){
-    for(int var_index = 0; var_index < from->variable_count; var_index++)
-      to->clauses[clause_index][var_index]=
-	from->clauses[clause_index][var_index];
-    to->clause_lengths[clause_index] = from->clause_lengths[clause_index];
+    to->clauses[clause_index] = from->clauses[clause_index];
+    to->clause_length[clause_index] = from->clause_length[clause_index];
+    to->fresh_clause[clause_index]=false;
   }
   return;
+}
+/**
+copy_clause(from, size)
+create a new clause array, and copy existing values into it.
+ */
+clause copy_clause(clause from, int size){
+  clause to = (clause)calloc(size, sizeof(assignment));
+  for(int i = 0; i < size; i++)
+    to[i] = from[i];
+  return to;
 }
 
 /** 
@@ -212,25 +228,31 @@ problem copy_problem(problem from){
    If introducing the variable makes some clause empty,
    we abort and return NULL.
  */
-problem introduce(problem phi, unsigned char variable, assignment a){
+// sharing : added constant true clause, and 
+// copy clause before changing it, updating fresh
+problem introduce(problem phi, int variable, assignment a){
   problem rho = copy_problem(phi);
   rho->variables[variable] = a;
-  for(int clause_index = 0; clause_index < rho->clause_count; clause_index++){
-    if(rho->clause_lengths[clause_index]){
-      if(rho->clauses[clause_index][variable] == a) {
-	rho->clause_lengths[clause_index] = 0;
+  for(int clause_index = 0; clause_index < rho->clause_count; clause_index++)
+{
+  if(rho->clause_length[clause_index]){
+    if(rho->clauses[clause_index][variable] == a) {
+      rho->clauses[clause_index] = the_true_clause;
+      rho->clause_length[clause_index] = 0;
+    }
+    else if (rho->clauses[clause_index][variable] == -a){
+      if(rho->clause_length[clause_index] == 1){
+	// making a clause unsatisfiable, fail
+	release_problem(rho);
+	return (problem) NULL;
       }
-      else if (rho->clauses[clause_index][variable] == -a){
-	rho->clauses[clause_index][variable] = UNASSIGNED;
-	rho->clause_lengths[clause_index] -= 1;
-	if(rho->clause_lengths[clause_index] == 0) {
-	  // emptied an unsatisfied clause, fail
-	  release_problem(rho);
-	  return (problem) NULL;
-	}
-      }
+      rho->clauses[clause_index] = copy_clause(phi->clauses[clause_index], rho->clause_count);
+      rho->fresh_clause[clause_index]=true;
+      rho->clauses[clause_index][variable] = UNASSIGNED;
+      rho->clause_length[clause_index] -= 1;
     }
   }
+ }
   return rho;
 }
 
@@ -243,13 +265,15 @@ problem introduce(problem phi, unsigned char variable, assignment a){
 void print_form(problem phi){
   std::cout<<"variables: ";
   for(int i = 0; i < phi->variable_count; i++)
-    std::cout<<i<<":"<<(int)phi->variables[i]<<" ";
+    std::cout<<i+1<<":"<<(int)phi->variables[i]<<" ";
   std::cout<<std::endl;
     
   for(int c = 0; c < phi->clause_count; c++){
-    for(int v = 0; v < phi->variable_count; v++)
-      std::cout<<c<<":"<<v<<":"<<(int)phi->clauses[c][v]<<" ";
-    std::cout<<std::endl;
+    if(phi->clauses[c]){
+      for(int v = 0; v < phi->variable_count; v++)
+	std::cout<<c+1<<":"<<v+1<<":"<<(int)phi->clauses[c][v]<<" ";
+      std::cout<<std::endl;
+    }
   }
   return;
 }

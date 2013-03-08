@@ -31,10 +31,20 @@ problem dummy_problem(const int size)
   for(int i = 0; i < size; i++){
     for(int j = 0; j < size; j++)
       phi->clauses[j][i]=FALSE; 
-    phi->clause_lengths[i]  = size;
+    phi->clause_length[i]  = size;
   }
   return phi;
 }
+
+void create_empty_clauses(problem phi){
+  for(int index = 0; index < phi->clause_count; index++){
+    phi->clauses[index] = (clause)calloc(phi->variable_count, sizeof(assignment));
+    phi->fresh_clause[index]=true;
+  }
+  return;
+}
+
+
 
 /** 
     read_problem_file(filename)
@@ -47,6 +57,7 @@ problem dummy_problem(const int size)
     when reading zero, advance to next clause
     finally, return the initialized problem.
  */
+// sharing feature : need to create clause arrays in root form
 problem read_problem_file(const char* filename) {
   std::ifstream input;
   std::string s;
@@ -75,6 +86,8 @@ problem read_problem_file(const char* filename) {
 	  }
 	  phi = empty_form_of_size(specified_clause_count, 
 				   specified_variable_count);
+	  create_empty_clauses(phi);
+
         } else if (s[0] != '%') {
 	  // s is not a comment, a problem statement, or a percentage sign
 	  // so it must be clause information : read it
@@ -85,9 +98,10 @@ problem read_problem_file(const char* filename) {
 	      iss>>var;
 	      if(var != 0) {
 		assert(clause_count < specified_clause_count);
+		// transform integer in input into offset and assignment
 		phi->clauses[clause_count][abs(var) -1] = 
 		  (var > 0)?TRUE : FALSE;
-		phi->clause_lengths[clause_count] += 1;
+		phi->clause_length[clause_count] += 1;
 	      } else if(var == 0) { clause_count++; }
 	    } // reading line
 	  } // phi is not null
