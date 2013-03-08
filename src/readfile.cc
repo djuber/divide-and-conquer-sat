@@ -13,7 +13,6 @@ provides read_problem_file
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <cassert>
 #include <cstdlib>
 
 
@@ -112,9 +111,9 @@ problem read_problem_file(const char* filename) {
   problem phi = (problem) NULL;
   int clause_count = 0;
   input.open(filename);
-// outline : find p line, read number of variables and number of clauses 
-// allocate a problem of that size
-// then seek to first non-comment line and begin reading clauses.
+  // outline : find p line, read number of variables and number of clauses 
+  // allocate a problem of that size
+  // then seek to first non-comment line and begin reading clauses.
   if(input.is_open()){
     while(input.good()){
       getline(input, s);
@@ -122,9 +121,8 @@ problem read_problem_file(const char* filename) {
 	if(s[0] == 'p') {
 	  phi = problem_from_problem_line(s);
         } 
-	else if (!s.empty() && s[0] != '%') {
+	else if (!s.empty() && s[0] != '%') 
 	  process_string_in_problem(s, phi, clause_count);
-	} // string is not a comment
       } // while input available
     }      
     input.close();
