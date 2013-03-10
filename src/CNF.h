@@ -6,7 +6,6 @@
 #define CNF_H
 
 
-
 // define types
 
 // our possible assignment states for each variable
@@ -54,8 +53,7 @@ void usage(char** args);
 // main algorithm function. True if a satisfying assignment was found
 bool satisfiable(problem phi);
 
-// load form phi from cnf file
-problem read_problem_file(const char* filename);
+
 
 // return the index of the shortest clause
 clause shortest(problem phi);

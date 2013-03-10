@@ -3,11 +3,13 @@
     Daniel Uber
 */
 
-#include "CNF.h"
+
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
 #include <cassert>
+#include "CNF.h"
+#include "readfile.h"
 
 /** 
     main()

@@ -9,10 +9,7 @@ provides read_problem_file
  */
 
 #include "CNF.h"
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <sstream>
+#include "readfile.h"
 #include <cstdlib>
 
 
@@ -92,6 +89,29 @@ problem problem_from_problem_line(std::string s){
   return phi;
 }
 
+/** read_problem_from_stream
+ */
+problem read_problem_from_stream(std::istream &input){
+  std::string s;
+  problem phi = (problem)NULL;
+  int clause_count = 0;
+  // outline : find p line, read number of variables and number of clauses 
+  // allocate a problem of that size
+  // then seek to first non-comment line and begin reading clauses.
+  while(input.good()){
+    getline(input, s);
+    if(s[0]!='c'){ // skip comment lines.
+      if(s[0] == 'p') {
+	phi = problem_from_problem_line(s);
+      } 
+      else if (!s.empty() && s[0] != '%') 
+	process_string_in_problem(s, phi, clause_count);
+    } // while input available
+  }      
+  return phi;
+}
+  
+
 
 /** 
     read_problem_file(filename)
@@ -107,24 +127,10 @@ problem problem_from_problem_line(std::string s){
 // sharing feature : need to create clause arrays in root form
 problem read_problem_file(const char* filename) {
   std::ifstream input;
-  std::string s;
   problem phi = (problem) NULL;
-  int clause_count = 0;
   input.open(filename);
-  // outline : find p line, read number of variables and number of clauses 
-  // allocate a problem of that size
-  // then seek to first non-comment line and begin reading clauses.
   if(input.is_open()){
-    while(input.good()){
-      getline(input, s);
-      if(s[0]!='c'){ // skip comment lines.
-	if(s[0] == 'p') {
-	  phi = problem_from_problem_line(s);
-        } 
-	else if (!s.empty() && s[0] != '%') 
-	  process_string_in_problem(s, phi, clause_count);
-      } // while input available
-    }      
+    phi = read_problem_from_stream(input);
     input.close();
   } else  // file not open
     std::cerr<<"file "<< filename<<" not found."<<std::endl;

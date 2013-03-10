@@ -1,6 +1,6 @@
 # CS408 Project 1
 # Daniel Uber
-headers = CNF.h
+headers = CNF.h readfile.h
 objects = CNF.o readfile.o
 winobjects = CNF.obj readfile.obj
 # the native unix compiler
@@ -10,7 +10,7 @@ CXXFLAGS = -Wall -Werror -g
 CXXWIN = i586-mingw32msvc-g++ 
 
 # dummy target
-all: unix windows
+all: unix  windows
 
 unix : cnf
 windows: cnf.exe
